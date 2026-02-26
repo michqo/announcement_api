@@ -46,6 +46,14 @@ describe("Announcement API", () => {
     expect(response.body[0].title).toBe("Test Announcement");
   });
 
+  it("GET /announcements/:id - should get a single announcement", async () => {
+    const response = await request.get(`/announcements/${announcementId}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.id).toBe(announcementId);
+    expect(response.body.title).toBe("Test Announcement");
+  });
+
   it("PATCH /announcements/:id - should update an announcement", async () => {
     const response = await request.patch(`/announcements/${announcementId}`).send({
       title: "Updated Title",

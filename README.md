@@ -65,7 +65,12 @@ pnpm build
 ]
 ```
 
-### 2. Create Announcement
+### 2. Get Single Announcement
+**Endpoint**: `GET /announcements/:id`
+
+**Response**: `200 OK` (or `404 Not Found`)
+
+### 3. Create Announcement
 **Endpoint**: `POST /announcements`
 
 **Request Body**:

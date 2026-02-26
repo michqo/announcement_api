@@ -22,6 +22,12 @@ const announcementSchema = z.object({
   }),
 });
 
+const getAnnouncementSchema = z.object({
+  params: z.object({
+    id: z.string().regex(/^\d+$/).transform(Number),
+  }),
+});
+
 const updateAnnouncementSchema = z.object({
   params: z.object({
     id: z.string().regex(/^\d+$/).transform(Number),
@@ -86,6 +92,28 @@ app.get("/announcements", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to fetch announcements" });
   }
 });
+
+app.get(
+  "/announcements/:id",
+  validate(getAnnouncementSchema),
+  async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const announcement = await prisma.announcement.findUnique({
+        where: { id },
+        include: { categories: true },
+      });
+
+      if (!announcement) {
+        return res.status(404).json({ error: "Announcement not found" });
+      }
+
+      res.json(announcement);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch announcement" });
+    }
+  }
+);
 
 app.post(
   "/announcements",
