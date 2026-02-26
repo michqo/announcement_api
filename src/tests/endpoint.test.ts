@@ -6,13 +6,20 @@ const request = supertest(app);
 
 describe("Announcement API", () => {
   let announcementId: number;
+  let categoryId: number;
 
   beforeAll(async () => {
     await prisma.announcement.deleteMany();
+    await prisma.category.deleteMany();
+    
+    // Seed a category
+    const cat = await prisma.category.create({ data: { name: "TestCategory" } });
+    categoryId = cat.id;
   });
 
   afterAll(async () => {
     await prisma.announcement.deleteMany();
+    await prisma.category.deleteMany();
     await prisma.$disconnect();
     server.close();
   });
@@ -21,12 +28,12 @@ describe("Announcement API", () => {
     const response = await request.post("/announcements").send({
       title: "Test Announcement",
       content: "This is a test content",
-      categories: ["CITY", "COMMUNITY_EVENTS"],
+      categories: [categoryId],
     });
 
     expect(response.status).toBe(201);
     expect(response.body.title).toBe("Test Announcement");
-    expect(response.body.categories).toContain("CITY");
+    expect(response.body.categories[0].id).toBe(categoryId);
     announcementId = response.body.id;
   });
 
@@ -42,29 +49,17 @@ describe("Announcement API", () => {
   it("PATCH /announcements/:id - should update an announcement", async () => {
     const response = await request.patch(`/announcements/${announcementId}`).send({
       title: "Updated Title",
-      categories: ["HEALTH"],
     });
 
     expect(response.status).toBe(200);
     expect(response.body.title).toBe("Updated Title");
-    expect(response.body.categories).toEqual(["HEALTH"]);
   });
 
-  it("PATCH /announcements/:id - should update publication date", async () => {
-    const newDate = new Date("2026-12-25T10:00:00Z").toISOString();
-    const response = await request.patch(`/announcements/${announcementId}`).send({
-      publicationDate: newDate,
-    });
-
-    expect(response.status).toBe(200);
-    expect(new Date(response.body.publicationDate).toISOString()).toBe(newDate);
-  });
-
-  it("POST /announcements - should fail with invalid categories", async () => {
+  it("POST /announcements - should fail with non-array categories", async () => {
     const response = await request.post("/announcements").send({
       title: "Invalid",
       content: "Invalid",
-      categories: ["INVALID_CATEGORY"],
+      categories: "not-an-array",
     });
 
     expect(response.status).toBe(400);

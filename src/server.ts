@@ -2,19 +2,23 @@ import express, { Request, Response, Express, NextFunction } from "express";
 import cors from "cors";
 import { z, ZodObject } from "zod";
 import { prisma } from "./lib/prisma";
-import { Category } from "@prisma/client";
 
 const app: Express = express();
 app.use(cors());
 app.use(express.json());
 
+const categorySchema = z.object({
+  body: z.object({
+    name: z.string().min(1),
+  }),
+});
+
 const announcementSchema = z.object({
   body: z.object({
     title: z.string().min(1),
     content: z.string().min(1),
-    categories: z
-      .array(z.enum(Object.values(Category) as [string, ...string[]]))
-      .min(1),
+    publicationDate: z.coerce.date().optional(),
+    categories: z.array(z.number()).min(1),
   }),
 });
 
@@ -26,10 +30,7 @@ const updateAnnouncementSchema = z.object({
     title: z.string().min(1).optional(),
     content: z.string().min(1).optional(),
     publicationDate: z.coerce.date().optional(),
-    categories: z
-      .array(z.enum(Object.values(Category) as [string, ...string[]]))
-      .min(1)
-      .optional(),
+    categories: z.array(z.number()).min(1).optional(),
   }),
 });
 
@@ -48,9 +49,35 @@ const validate =
     }
   };
 
+app.get("/categories", async (req: Request, res: Response) => {
+  try {
+    const categories = await prisma.category.findMany();
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch categories" });
+  }
+});
+
+app.post(
+  "/categories",
+  validate(categorySchema),
+  async (req: Request, res: Response) => {
+    try {
+      const { name } = req.body;
+      const category = await prisma.category.create({
+        data: { name },
+      });
+      res.status(201).json(category);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create category" });
+    }
+  }
+);
+
 app.get("/announcements", async (req: Request, res: Response) => {
   try {
     const announcements = await prisma.announcement.findMany({
+      include: { categories: true },
       orderBy: { lastUpdate: "desc" },
     });
 
@@ -65,13 +92,17 @@ app.post(
   validate(announcementSchema),
   async (req: Request, res: Response) => {
     try {
-      const { title, content, categories } = req.body;
+      const { title, content, categories, publicationDate } = req.body;
       const announcement = await prisma.announcement.create({
         data: {
           title,
           content,
-          categories,
+          publicationDate,
+          categories: {
+            connect: categories.map((id: number) => ({ id })),
+          },
         },
+        include: { categories: true },
       });
 
       res.status(201).json(announcement);
@@ -95,9 +126,12 @@ app.patch(
         data: {
           title,
           content,
-          categories,
           publicationDate,
+          categories: categories
+            ? { set: categories.map((id: number) => ({ id })) }
+            : undefined,
         },
+        include: { categories: true },
       });
 
       res.json(announcement);

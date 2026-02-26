@@ -57,7 +57,10 @@ pnpm build
     "content": "Join us this Friday for a city hall meeting.",
     "publicationDate": "2026-02-26T14:30:00.000Z",
     "lastUpdate": "2026-02-26T14:30:00.000Z",
-    "categories": ["CITY", "COMMUNITY_EVENTS"]
+    "categories": [
+      { "id": 1, "name": "CITY" },
+      { "id": 2, "name": "COMMUNITY_EVENTS" }
+    ]
   }
 ]
 ```
@@ -70,12 +73,9 @@ pnpm build
 {
   "title": "New Park Opening",
   "content": "A new park is opening in the city center!",
-  "categories": ["CITY", "KIDS_FAMILY"]
+  "categories": [1, 3]
 }
 ```
-
-**Available Categories**:
-`CITY`, `COMMUNITY_EVENTS`, `CRIME_SAFETY`, `CULTURE`, `DISCOUNTS_BENEFITS`, `EMERGENCIES`, `FOR_SENIORS`, `HEALTH`, `KIDS_FAMILY`
 
 **Response**: `201 Created`
 
@@ -86,13 +86,16 @@ pnpm build
 ```json
 {
   "title": "Updated Title",
-  "content": "Updated content...",
-  "publicationDate": "2026-02-26T15:45:00.000Z",
-  "categories": ["HEALTH"]
+  "categories": [2]
 }
 ```
 
 **Response**: `200 OK`
+
+### 4. Categories Management
+- `GET /categories`: List all categories.
+- `POST /categories`: Create a new category.
+  - Body: `{ "name": "CITY" }`
 
 ## Project Structure
 - `src/server.ts`: API routes and server configuration.
