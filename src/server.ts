@@ -12,19 +12,26 @@ const announcementSchema = z.object({
   body: z.object({
     title: z.string().min(1),
     content: z.string().min(1),
-    categories: z.array(z.nativeEnum(Category)).min(1),
+    categories: z
+      .array(z.enum(Object.values(Category) as [string, ...string[]]))
+      .min(1),
   }),
 });
 
-const formatDate = (date: Date) => {
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  const mm = pad(date.getMonth() + 1);
-  const dd = pad(date.getDate());
-  const yyyy = date.getFullYear();
-  const hh = pad(date.getHours());
-  const min = pad(date.getMinutes());
-  return `${mm}/${dd}/${yyyy} ${hh}:${min}`;
-};
+const updateAnnouncementSchema = z.object({
+  params: z.object({
+    id: z.string().regex(/^\d+$/).transform(Number),
+  }),
+  body: z.object({
+    title: z.string().min(1).optional(),
+    content: z.string().min(1).optional(),
+    publicationDate: z.coerce.date().optional(),
+    categories: z
+      .array(z.enum(Object.values(Category) as [string, ...string[]]))
+      .min(1)
+      .optional(),
+  }),
+});
 
 const validate =
   (schema: ZodObject<any>) =>
@@ -44,16 +51,10 @@ const validate =
 app.get("/announcements", async (req: Request, res: Response) => {
   try {
     const announcements = await prisma.announcement.findMany({
-      orderBy: { publicationDate: "desc" },
+      orderBy: { lastUpdate: "desc" },
     });
 
-    const formattedAnnouncements = announcements.map((a) => ({
-      ...a,
-      publicationDate: formatDate(a.publicationDate),
-      lastUpdate: formatDate(a.lastUpdate),
-    }));
-
-    res.json(formattedAnnouncements);
+    res.json(announcements);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch announcements" });
   }
@@ -73,14 +74,38 @@ app.post(
         },
       });
 
-      res.status(201).json({
-        ...announcement,
-        publicationDate: formatDate(announcement.publicationDate),
-        lastUpdate: formatDate(announcement.lastUpdate),
-      });
+      res.status(201).json(announcement);
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Failed to create announcement" });
+    }
+  }
+);
+
+app.patch(
+  "/announcements/:id",
+  validate(updateAnnouncementSchema),
+  async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { title, content, categories, publicationDate } = req.body;
+
+      const announcement = await prisma.announcement.update({
+        where: { id },
+        data: {
+          title,
+          content,
+          categories,
+          publicationDate,
+        },
+      });
+
+      res.json(announcement);
+    } catch (error: any) {
+      if (error.code === "P2025") {
+        return res.status(404).json({ error: "Announcement not found" });
+      }
+      res.status(500).json({ error: "Failed to update announcement" });
     }
   }
 );

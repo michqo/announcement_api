@@ -55,8 +55,8 @@ pnpm build
     "id": 1,
     "title": "Community Meeting",
     "content": "Join us this Friday for a city hall meeting.",
-    "publicationDate": "02/26/2026 14:30",
-    "lastUpdate": "02/26/2026 14:30",
+    "publicationDate": "2026-02-26T14:30:00.000Z",
+    "lastUpdate": "2026-02-26T14:30:00.000Z",
     "categories": ["CITY", "COMMUNITY_EVENTS"]
   }
 ]
@@ -78,6 +78,21 @@ pnpm build
 `CITY`, `COMMUNITY_EVENTS`, `CRIME_SAFETY`, `CULTURE`, `DISCOUNTS_BENEFITS`, `EMERGENCIES`, `FOR_SENIORS`, `HEALTH`, `KIDS_FAMILY`
 
 **Response**: `201 Created`
+
+### 3. Edit Announcement
+**Endpoint**: `PATCH /announcements/:id`
+
+**Request Body** (all fields optional):
+```json
+{
+  "title": "Updated Title",
+  "content": "Updated content...",
+  "publicationDate": "2026-02-26T15:45:00.000Z",
+  "categories": ["HEALTH"]
+}
+```
+
+**Response**: `200 OK`
 
 ## Project Structure
 - `src/server.ts`: API routes and server configuration.
