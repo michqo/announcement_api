@@ -2,6 +2,8 @@
 
 A fast, TypeScript-based REST API for managing announcements, built with Express, Prisma, and PostgreSQL.
 
+**Web App Frontend**: [announcements_web](https://github.com/michqo/announcements_web)
+
 ## Features
 - **Prisma 7 Integration**: Type-safe database queries with PostgreSQL.
 - **Zod Validation**: Robust request body validation.
