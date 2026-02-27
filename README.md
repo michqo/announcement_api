@@ -48,6 +48,10 @@ pnpm build
 ### 1. List All Announcements
 **Endpoint**: `GET /announcements`
 
+**Query Parameters** (optional):
+- `search`: Filter by title (case-insensitive).
+- `categories`: Filter by one or more category IDs (e.g., `?categories=1&categories=2`).
+
 **Response**: `200 OK`
 ```json
 [

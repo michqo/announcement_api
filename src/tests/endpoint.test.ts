@@ -80,4 +80,20 @@ describe("Announcement API", () => {
 
     expect(response.status).toBe(404);
   });
+
+  it("GET /announcements - should filter by category", async () => {
+    const response = await request.get(`/announcements?categories=${categoryId}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.length).toBeGreaterThan(0);
+    expect(response.body[0].categories.some((c: any) => c.id === categoryId)).toBe(true);
+  });
+
+  it("GET /announcements - should search by title or content", async () => {
+    const response = await request.get(`/announcements?search=Updated`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.length).toBeGreaterThan(0);
+    expect(response.body[0].title).toContain("Updated");
+  });
 });

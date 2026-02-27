@@ -10,7 +10,7 @@ app.use(express.json());
 const categorySchema = z.object({
   body: z.object({
     name: z.string().min(1),
-    displayName: z.string().min(1),
+    displayName: z.string().min(1).optional(),
   }),
 });
 
@@ -19,25 +19,39 @@ const announcementSchema = z.object({
     title: z.string().min(1),
     content: z.string().min(1),
     publicationDate: z.coerce.date().optional(),
-    categories: z.array(z.number()).min(1),
+    categories: z.array(z.coerce.number()).min(1),
+  }),
+});
+
+const getAnnouncementsSchema = z.object({
+  query: z.object({
+    search: z.string().optional(),
+    categories: z
+      .union([z.string(), z.array(z.string())])
+      .optional()
+      .transform((val) => {
+        if (!val) return undefined;
+        const array = Array.isArray(val) ? val : [val];
+        return array.map((v) => parseInt(v)).filter((v) => !isNaN(v));
+      }),
   }),
 });
 
 const getAnnouncementSchema = z.object({
   params: z.object({
-    id: z.string().regex(/^\d+$/).transform(Number),
+    id: z.coerce.number(),
   }),
 });
 
 const updateAnnouncementSchema = z.object({
   params: z.object({
-    id: z.string().regex(/^\d+$/).transform(Number),
+    id: z.coerce.number(),
   }),
   body: z.object({
     title: z.string().min(1).optional(),
     content: z.string().min(1).optional(),
     publicationDate: z.coerce.date().optional(),
-    categories: z.array(z.number()).min(1).optional(),
+    categories: z.array(z.coerce.number()).min(1).optional(),
   }),
 });
 
@@ -45,14 +59,36 @@ const validate =
   (schema: ZodObject<any>) =>
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await schema.parseAsync({
+      const result = await schema.parseAsync({
         body: req.body,
         query: req.query,
         params: req.params,
       });
+
+      // Update request objects with validated and transformed data
+      req.body = result.body;
+      
+      // Using defineProperty to override Express getters
+      Object.defineProperty(req, "query", {
+        value: result.query,
+        configurable: true,
+        enumerable: true,
+      });
+      Object.defineProperty(req, "params", {
+        value: result.params,
+        configurable: true,
+        enumerable: true,
+      });
+
       return next();
     } catch (error) {
-      return res.status(400).json(error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: "Validation failed",
+          details: error.format(),
+        });
+      }
+      return res.status(500).json({ error: "Internal server error during validation" });
     }
   };
 
@@ -72,7 +108,7 @@ app.post(
     try {
       const { name, displayName } = req.body;
       const category = await prisma.category.create({
-        data: { name, displayName },
+        data: { name, displayName: displayName || name },
       });
       res.status(201).json(category);
     } catch (error) {
@@ -81,25 +117,49 @@ app.post(
   }
 );
 
-app.get("/announcements", async (req: Request, res: Response) => {
-  try {
-    const announcements = await prisma.announcement.findMany({
-      include: { categories: true },
-      orderBy: { lastUpdate: "desc" },
-    });
+app.get(
+  "/announcements",
+  validate(getAnnouncementsSchema),
+  async (req: Request, res: Response) => {
+    try {
+      const { search, categories } = req.query as any;
 
-    res.json(announcements);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch announcements" });
+      const where: any = {};
+
+      if (search) {
+        where.OR = [
+          { title: { contains: search, mode: "insensitive" } },
+          { content: { contains: search, mode: "insensitive" } },
+        ];
+      }
+
+      if (categories && categories.length > 0) {
+        where.categories = {
+          some: {
+            id: { in: categories },
+          },
+        };
+      }
+
+      const announcements = await prisma.announcement.findMany({
+        where,
+        include: { categories: true },
+        orderBy: { lastUpdate: "desc" },
+      });
+
+      res.json(announcements);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch announcements" });
+    }
   }
-});
+);
 
 app.get(
   "/announcements/:id",
   validate(getAnnouncementSchema),
   async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id);
+      const { id } = req.params as any;
       const announcement = await prisma.announcement.findUnique({
         where: { id },
         include: { categories: true },
@@ -136,7 +196,6 @@ app.post(
 
       res.status(201).json(announcement);
     } catch (error) {
-      console.error(error);
       res.status(500).json({ error: "Failed to create announcement" });
     }
   }
@@ -147,7 +206,7 @@ app.patch(
   validate(updateAnnouncementSchema),
   async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id);
+      const { id } = req.params as any;
       const { title, content, categories, publicationDate } = req.body;
 
       const announcement = await prisma.announcement.update({
