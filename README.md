@@ -102,6 +102,47 @@ pnpm build
 - `POST /categories`: Create a new category.
   - Body: `{ "name": "CITY", "displayName": "City" }`
 
+## Mock Data Examples
+
+### 1. Initial Categories
+Post these individually to `POST /categories`:
+```json
+[
+  { "name": "CITY", "displayName": "City" },
+  { "name": "COMMUNITY_EVENTS", "displayName": "Community Events" },
+  { "name": "CRIME_SAFETY", "displayName": "Crime & Safety" },
+  { "name": "CULTURE", "displayName": "Culture" },
+  { "name": "DISCOUNTS_BENEFITS", "displayName": "Discounts & Benefits" },
+  { "name": "EMERGENCIES", "displayName": "Emergencies" },
+  { "name": "FOR_SENIORS", "displayName": "For Seniors" },
+  { "name": "HEALTH", "displayName": "Health" },
+  { "name": "KIDS_FAMILY", "displayName": "Kids & Family" }
+]
+```
+
+### 2. Sample Announcements
+Post to `POST /announcements`:
+
+**Marathon Event**
+```json
+{
+  "title": "Urban Marathon 2026",
+  "content": "Join the annual city marathon starting from the main square. Registration is now open!",
+  "categories": [1, 2],
+  "publicationDate": "2026-02-01T08:00:00Z"
+}
+```
+
+**Senior Health**
+```json
+{
+  "title": "Free Health Checkups",
+  "content": "Local clinics are offering free health screenings for seniors this weekend.",
+  "categories": [8, 7],
+  "publicationDate": "2026-02-10T10:30:00Z"
+}
+```
+
 ## Project Structure
 - `src/server.ts`: API routes and server configuration.
 - `src/lib/prisma.ts`: Prisma Client singleton with PostgreSQL adapter.
