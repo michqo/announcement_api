@@ -10,6 +10,7 @@ app.use(express.json());
 const categorySchema = z.object({
   body: z.object({
     name: z.string().min(1),
+    displayName: z.string().min(1),
   }),
 });
 
@@ -69,9 +70,9 @@ app.post(
   validate(categorySchema),
   async (req: Request, res: Response) => {
     try {
-      const { name } = req.body;
+      const { name, displayName } = req.body;
       const category = await prisma.category.create({
-        data: { name },
+        data: { name, displayName },
       });
       res.status(201).json(category);
     } catch (error) {

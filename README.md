@@ -58,8 +58,8 @@ pnpm build
     "publicationDate": "2026-02-26T14:30:00.000Z",
     "lastUpdate": "2026-02-26T14:30:00.000Z",
     "categories": [
-      { "id": 1, "name": "CITY" },
-      { "id": 2, "name": "COMMUNITY_EVENTS" }
+      { "id": 1, "name": "CITY", "displayName": "City" },
+      { "id": 2, "name": "COMMUNITY_EVENTS", "displayName": "Community Events" }
     ]
   }
 ]
@@ -100,7 +100,7 @@ pnpm build
 ### 4. Categories Management
 - `GET /categories`: List all categories.
 - `POST /categories`: Create a new category.
-  - Body: `{ "name": "CITY" }`
+  - Body: `{ "name": "CITY", "displayName": "City" }`
 
 ## Project Structure
 - `src/server.ts`: API routes and server configuration.

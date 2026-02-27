@@ -18,5 +18,6 @@ model Announcement {
 model Category {
   id            Int            @id @default(autoincrement())
   name          String         @unique
+  displayName   String         @default("")
   announcements Announcement[] @relation("AnnouncementToCategory")
 }
