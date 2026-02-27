@@ -32,6 +32,10 @@ pnpm install
    ```bash
    pnpm dlx prisma generate
    ```
+4. (Optional) Seed the database with initial mock data:
+   ```bash
+   pnpm dlx prisma db seed
+   ```
 
 ### 4. Running the App
 ```bash
@@ -41,6 +45,22 @@ pnpm dev
 # Build for production
 pnpm build
 ```
+
+## Running with Docker
+
+You can run the entire stack (API + PostgreSQL) using Docker Compose:
+
+1. **Start the stack**:
+   ```bash
+   docker compose up --build -d
+   ```
+2. **Setup the database** (Runs migrations and mock data):
+   ```bash
+   docker compose exec api npx prisma migrate deploy && \
+   docker compose exec api npx prisma db seed
+   ```
+
+The API will be available at `http://localhost:8000`.
 
 ## API Documentation
 

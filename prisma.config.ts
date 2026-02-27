@@ -6,4 +6,7 @@ export default defineConfig({
   datasource: {
     url: env('DATABASE_URL'),
   },
+  migrations: {
+    seed: 'ts-node-dev --transpile-only -r @swc-node/register ./prisma/seed.ts',
+  },
 });

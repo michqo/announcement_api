@@ -35,5 +35,8 @@
     "express": "^5.2.1",
     "pg": "^8.19.0",
     "zod": "^4.3.6"
+  },
+  "prisma": {
+    "seed": "ts-node-dev --transpile-only -r @swc-node/register prisma/seed.ts"
   }
 }
